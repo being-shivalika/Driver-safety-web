@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StatCard } from '../components/ui/StatCard';
 import { AlertCard } from '../components/ui/AlertCard';
+import { useAuth } from '../context/AuthContext';
+import { ShieldCheck, AlertTriangle, AlertOctagon, Info } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
 import { FleetMap } from '../features/fleet/FleetMap';
 import { DriverSafetyDrawer } from '../features/drivers/DriverSafetyDrawer';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [alerts, setAlerts] = useState([]);
@@ -53,14 +56,31 @@ export const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <StatCard title="Total Vehicles" value={summary?.totalVehicles || 0} type="primary" />
-        <StatCard title="Active Trips" value={summary?.activeTrips || 0} />
-        <StatCard title="Low Risk" value={summary?.lowRisk || 0} type="low" />
-        <StatCard title="Moderate" value={summary?.moderateRisk || 0} type="moderate" />
-        <StatCard title="High" value={summary?.highRisk || 0} type="high" />
-        <StatCard title="Critical" value={summary?.criticalRisk || 0} type="critical" />
+      {/* Welcome Banner */}
+      <div className="bg-fleet-navy text-white rounded-xl p-6 shadow-sm border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Welcome back, {user?.name || 'Admin User'} 👋</h1>
+          <p className="text-slate-400 text-sm">Here is what is happening across your fleet today.</p>
+        </div>
+        <div className="bg-slate-800 rounded-lg p-4 flex items-center gap-6 border border-slate-700">
+          <div>
+            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Total Fleet</p>
+            <p className="text-xl font-bold text-slate-200">{summary?.totalVehicles || 0}</p>
+          </div>
+          <div className="w-px h-8 bg-slate-700"></div>
+          <div>
+            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">On Journey</p>
+            <p className="text-2xl font-bold text-fleet-accent">{summary?.activeTrips || 0}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary KPI Cards (Risk Breakdown) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard title="Low Risk" value={summary?.lowRisk || 0} type="low" icon={<ShieldCheck className="w-5 h-5 text-green-700" />} />
+        <StatCard title="Moderate" value={summary?.moderateRisk || 0} type="moderate" icon={<Info className="w-5 h-5 text-yellow-700" />} />
+        <StatCard title="High" value={summary?.highRisk || 0} type="high" icon={<AlertTriangle className="w-5 h-5 text-orange-700" />} />
+        <StatCard title="Critical" value={summary?.criticalRisk || 0} type="critical" icon={<AlertOctagon className="w-5 h-5 text-red-700" />} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

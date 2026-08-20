@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const StatCard = ({ title, value, subtitle, type = 'default' }) => {
+export const StatCard = ({ title, value, subtitle, type = 'default', icon }) => {
   let colors = 'bg-white border-slate-200';
   let valueColor = 'text-slate-800';
 
@@ -22,10 +22,17 @@ export const StatCard = ({ title, value, subtitle, type = 'default' }) => {
   }
 
   return (
-    <div className={`rounded-xl border p-5 shadow-sm ${colors}`}>
-      <h3 className="text-sm font-medium text-slate-500 mb-1">{title}</h3>
-      <div className={`text-3xl font-bold ${valueColor}`}>{value}</div>
-      {subtitle && <p className="text-xs text-slate-500 mt-2">{subtitle}</p>}
+    <div className={`rounded-xl border p-4 shadow-sm flex items-center justify-between ${colors}`}>
+      <div>
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{title}</h3>
+        <div className={`text-2xl font-bold ${valueColor}`}>{value}</div>
+        {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+      </div>
+      {icon && (
+        <div className={`p-2 rounded-lg opacity-80 ${colors.replace('bg-', 'bg-').replace('50', '200')}`}>
+          {icon}
+        </div>
+      )}
     </div>
   );
 };
