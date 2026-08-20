@@ -40,23 +40,62 @@ export const apiClient = {
     // We no longer have mock activeTrips or risks natively from driver API unless status represents active trip
     const activeTrips = drivers.filter(d => d.status === 'in_progress' || d.status === 'IN_PROGRESS').length;
     
+    let lowRisk = 0;
+    let moderateRisk = 0;
+    let highRisk = 0;
+    let criticalRisk = 0;
+
+    drivers.forEach(d => {
+      if (d.riskLevel === 'LOW') lowRisk++;
+      else if (d.riskLevel === 'MODERATE') moderateRisk++;
+      else if (d.riskLevel === 'HIGH') highRisk++;
+      else if (d.riskLevel === 'CRITICAL') criticalRisk++;
+      else lowRisk++; // Default to low if unknown
+    });
+    
     return {
       totalVehicles,
       activeTrips,
-      lowRisk: 0,
-      moderateRisk: 0,
-      highRisk: 0,
-      criticalRisk: 0
+      lowRisk,
+      moderateRisk,
+      highRisk,
+      criticalRisk
     };
   },
 
   async getDriverInfo() {
-    const response = await fetch('https://vigildrivebackend.onrender.com/api/v2/driverinfo/');
-    if (!response.ok) {
-      throw new Error(`Failed to fetch driver info: ${response.statusText}`);
+    try {
+      const response = await fetch('https://vigildrivebackend.onrender.com/api/v2/driverinfo/');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch driver info: ${response.statusText}`);
+      }
+      const data = await response.json();
+      
+      // If API returns data, use it
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map(normalizeDriverInfo);
+      }
+      
+      // If API is empty, fall through to the fallback below
+      console.warn("API returned empty array. Using fallback data for preview.");
+    } catch (error) {
+      console.warn("API is unavailable (502/Error). Using fallback data for preview.", error);
     }
-    const data = await response.json();
-    return data.map(normalizeDriverInfo);
+    
+    // Fallback: Display at least one driver from mock data so the dashboard isn't empty
+    return MOCK_DRIVERS.map(d => ({
+      driverId: d.truck_id,
+      driverName: d.driver_name,
+      truckId: d.truck_id,
+      truckNumber: d.vehicle_no,
+      origin: 'Delhi (Mock)',
+      destination: 'Mumbai (Mock)',
+      latitude: d.currentLocation?.latitude || 28.6139,
+      longitude: d.currentLocation?.longitude || 77.2090,
+      status: 'IN_PROGRESS',
+      riskLevel: d.riskLevel,
+      riskScore: d.riskScore
+    }));
   },
 
   async getFleetVehicles() {
@@ -104,8 +143,22 @@ export const apiClient = {
 
   async getDriverRiskHistory(id) {
     await delay(400);
+    const driver = await this.getDriverById(id);
+    
+    // Default to a low score if the API doesn't provide one
+    const currentScore = driver?.riskScore || 12;
+    
+    // Generate a realistic fatigue curve that ends at the driver's current real/mock score
+    const history = [
+      { time: '10:00 AM', score: Math.max(0, Math.floor(currentScore * 0.2)) },
+      { time: '11:00 AM', score: Math.max(0, Math.floor(currentScore * 0.4)) },
+      { time: '12:00 PM', score: Math.max(0, Math.floor(currentScore * 0.6)) },
+      { time: '01:00 PM', score: Math.max(0, Math.floor(currentScore * 0.8)) },
+      { time: '02:00 PM', score: currentScore },
+    ];
+
     return {
-      history: MOCK_RISK_HISTORY,
+      history,
       events: MOCK_EVENTS
     };
   },
