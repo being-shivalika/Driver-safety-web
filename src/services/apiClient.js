@@ -192,10 +192,27 @@ export const apiClient = {
   async getAlerts() {
     await delay(500);
     const drivers = await this.getDriverInfo();
-    return MOCK_ALERTS.map(alert => ({
-      ...alert,
-      driver: drivers.find(d => d.driverId === alert.driverId) || {}
-    }));
+    
+    const dynamicAlerts = [];
+    let alertIdCounter = 1;
+    
+    drivers.forEach(driver => {
+      if (driver.riskLevel === 'CRITICAL' || driver.riskLevel === 'HIGH') {
+        dynamicAlerts.push({
+          id: `A00${alertIdCounter++}`,
+          severity: driver.riskLevel,
+          driverId: driver.driverId,
+          vehicleId: driver.truckId,
+          description: driver.riskLevel === 'CRITICAL' ? 'Critical fatigue detected: Extended eye closure' : 'High fatigue: Frequent yawning',
+          riskScore: driver.riskScore,
+          timestamp: new Date(Date.now() - 1000 * 60 * Math.floor(Math.random() * 30)).toISOString(),
+          resolved: false,
+          driver: driver
+        });
+      }
+    });
+
+    return dynamicAlerts.sort((a, b) => b.riskScore - a.riskScore);
   },
 
   async getTrips() {
