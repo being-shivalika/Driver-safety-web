@@ -157,9 +157,35 @@ export const apiClient = {
       { time: '02:00 PM', score: currentScore },
     ];
 
+    // Generate dynamic events based on the risk score
+    const generateEvents = (score) => {
+      const events = [
+        { id: 'E1', time: '10:00 AM', event: 'Trip started', severity: 'LOW' }
+      ];
+      
+      if (score > 30) {
+        events.push({ id: 'E2', time: '12:00 PM', event: 'Yawn detected', severity: 'MODERATE' });
+      }
+      if (score > 50) {
+        events.push({ id: 'E3', time: '01:00 PM', event: 'Rest suggested', severity: 'MODERATE' });
+      }
+      if (score > 70) {
+        events.push({ id: 'E4', time: '01:30 PM', event: 'Extended eye closure detected', severity: 'HIGH' });
+      }
+      if (score > 85) {
+        events.push({ id: 'E5', time: '02:00 PM', event: 'Fatigue threshold exceeded', severity: 'CRITICAL' });
+      }
+      
+      if (score <= 30) {
+        events.push({ id: 'E2', time: '12:30 PM', event: 'Routine safety check passed', severity: 'LOW' });
+      }
+      
+      return events;
+    };
+
     return {
       history,
-      events: MOCK_EVENTS
+      events: generateEvents(currentScore)
     };
   },
 
