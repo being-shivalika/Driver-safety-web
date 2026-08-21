@@ -80,8 +80,10 @@ export const apiClient = {
       // If API returns data, use it
       if (Array.isArray(infoData) && infoData.length > 0) {
         return infoData.map(d => {
-          // Join with driverdata based on the internal database 'id'
-          const telemetry = Array.isArray(telemetryData) ? telemetryData.find(t => t.id === d.id) : null;
+          // Join with driverdata based on truck_id (best) or fallback to internal 'id' (legacy)
+          const telemetry = Array.isArray(telemetryData) 
+            ? telemetryData.find(t => (t.truck_id && t.truck_id === d.truck_id) || t.id === d.id) 
+            : null;
           
           return {
             driverId: d.truck_id, // UI uses truck_id as the unique key
