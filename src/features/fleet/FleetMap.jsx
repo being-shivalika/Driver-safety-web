@@ -62,11 +62,16 @@ export const FleetMap = ({ vehicles, onVehicleSelect }) => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        {vehicles.map((vehicle) => {
-          const lat = vehicle.currentLocation ? vehicle.currentLocation.latitude : vehicle.latitude;
-          const lng = vehicle.currentLocation ? vehicle.currentLocation.longitude : vehicle.longitude;
+        {vehicles.map((vehicle, idx) => {
+          const rawLat = vehicle.currentLocation ? vehicle.currentLocation.latitude : vehicle.latitude;
+          const rawLng = vehicle.currentLocation ? vehicle.currentLocation.longitude : vehicle.longitude;
           
-          if (lat === undefined || lng === undefined || isNaN(lat) || isNaN(lng)) return null;
+          if (rawLat === undefined || rawLng === undefined || isNaN(rawLat) || isNaN(rawLng)) return null;
+          
+          // Add a tiny deterministic offset based on ID to prevent perfectly stacked markers for vehicles with identical DB coordinates
+          const idNum = parseInt(String(vehicle.driverId || vehicle.id).replace(/\D/g, '') || idx) || idx;
+          const lat = rawLat + ((idNum % 5) * 0.015);
+          const lng = rawLng + ((idNum % 7) * 0.015);
           
           const currentPos = [lat, lng];
           

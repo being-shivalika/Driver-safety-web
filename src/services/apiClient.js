@@ -145,8 +145,8 @@ export const apiClient = {
         truck_no: data.vehicleNo,
         start_point: data.startPoint || "Not Assigned",
         end_point: data.endPoint || "Not Assigned",
-        lat: "28.6139", // Default starting coords
-        lon: "77.2090",
+        lat: (28.6139 + (Math.random() * 0.05 - 0.025)).toFixed(4).toString(),
+        lon: (77.2090 + (Math.random() * 0.05 - 0.025)).toFixed(4).toString(),
         status: "IN_PROGRESS"
       };
 

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StatCard } from '../components/ui/StatCard';
 import { AlertCard } from '../components/ui/AlertCard';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, AlertTriangle, AlertOctagon, Info } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, AlertOctagon, Info, X } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
 import { FleetMap } from '../features/fleet/FleetMap';
 import { DriverSafetyDrawer } from '../features/drivers/DriverSafetyDrawer';
@@ -16,26 +16,54 @@ export const DashboardPage = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDriverId, setSelectedDriverId] = useState(null);
+  
+  // Notification state
+  const [criticalNotification, setCriticalNotification] = useState(null);
+  const notifiedAlertIds = useRef(new Set());
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      setLoading(true);
+    let isMounted = true;
+    
+    const loadDashboard = async (isBackground = false) => {
+      if (!isBackground) setLoading(true);
       try {
         const [sum, vehi, alrts] = await Promise.all([
           apiClient.getDashboardSummary(),
           apiClient.getFleetVehicles(),
           apiClient.getAlerts()
         ]);
-        setSummary(sum);
-        setVehicles(vehi);
-        setAlerts(alrts.slice(0, 3)); // Only show top 3 alerts
+        
+        if (isMounted) {
+          setSummary(sum);
+          setVehicles(vehi);
+          setAlerts(alrts.slice(0, 3)); // Only show top 3 alerts
+          
+          // Check for new critical alerts
+          const newCritical = alrts.filter(a => a.severity === 'CRITICAL' && !notifiedAlertIds.current.has(a.id));
+          if (newCritical.length > 0) {
+            setCriticalNotification(`CRITICAL ALERT: ${newCritical[0].driver?.driverName || 'A driver'} requires immediate intervention due to high fatigue!`);
+            newCritical.forEach(a => notifiedAlertIds.current.add(a.id));
+            setTimeout(() => {
+              if (isMounted) setCriticalNotification(null);
+            }, 8000);
+          }
+        }
       } catch (error) {
         console.error("Failed to load dashboard", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
+    
     loadDashboard();
+    
+    // Poll every 10 seconds for real-time updates
+    const interval = setInterval(() => loadDashboard(true), 10000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const riskyVehicles = vehicles.filter(v => v.riskLevel && v.riskLevel !== 'LOW').sort((a, b) => (b.riskScore || 0) - (a.riskScore || 0)).slice(0, 5);
@@ -55,7 +83,22 @@ export const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Critical Notification Banner */}
+      {criticalNotification && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md animate-in slide-in-from-top-4 fade-in duration-300">
+          <div className="bg-red-600 text-white rounded-lg shadow-xl p-4 flex items-start gap-3 border border-red-800">
+            <AlertOctagon className="w-6 h-6 flex-shrink-0 animate-pulse" />
+            <div className="flex-1 pt-0.5">
+              <p className="font-bold text-sm tracking-wide">{criticalNotification}</p>
+            </div>
+            <button onClick={() => setCriticalNotification(null)} className="p-1 hover:bg-red-700 rounded-full transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Banner */}
       <div className="bg-fleet-navy text-white rounded-xl p-6 shadow-sm border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
