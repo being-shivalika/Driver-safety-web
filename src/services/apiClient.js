@@ -136,33 +136,42 @@ export const apiClient = {
   },
 
   async registerDriver(data) {
-    await delay(800);
-    // Simulate backend response
-    const newDriver = {
-      driver_id: `DRV-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      truck_id: data.truckId,
-      driver_name: data.driverName,
-      vehicle_no: data.vehicleNo,
-      route: {
-        start: { latitude: 0, longitude: 0 },
-        end: { latitude: 0, longitude: 0 }
-      },
-      currentLocation: null,
-      riskLevel: 'LOW',
-      riskScore: 0,
-      lastCheck: new Date().toISOString()
-    };
-    
-    // In a real app, this would be a POST request. For our mock, we just push to the array.
-    MOCK_DRIVERS.push(newDriver);
-    
-    // Return backend contract format
-    return {
-      driver_id: newDriver.driver_id,
-      truck_id: newDriver.truck_id,
-      driver_name: newDriver.driver_name,
-      vehicle_no: newDriver.vehicle_no
-    };
+    try {
+      const payload = {
+        driver: data.driverName,
+        truck_id: data.truckId,
+        truck_no: data.vehicleNo,
+        start_point: "Pending",
+        end_point: "Pending",
+        lat: "28.6139", // Default starting coords
+        lon: "77.2090",
+        status: "IN_PROGRESS"
+      };
+
+      const response = await fetch('https://vigildrivebackend.onrender.com/api/v2/driverinfo/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to register driver: ${response.statusText}`);
+      }
+      
+      const newDriver = await response.json();
+      
+      return {
+        driver_id: newDriver.id,
+        truck_id: newDriver.truck_id,
+        driver_name: newDriver.driver,
+        vehicle_no: newDriver.truck_no
+      };
+    } catch (error) {
+      console.error("Error registering driver:", error);
+      throw error;
+    }
   },
 
   async getDriverRiskHistory(id) {
