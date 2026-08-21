@@ -220,7 +220,7 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
 
 
               {/* Trend Section */}
-              {history && (
+              {history && history.history?.length > 0 ? (
                 <div className="opacity-100">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -263,9 +263,15 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                     </ResponsiveContainer>
                   </div>
                 </div>
+              ) : (
+                <div className="border border-dashed border-slate-200 rounded-xl p-6 text-center">
+                  <Activity className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-slate-500">No Trip History Yet</p>
+                  <p className="text-xs text-slate-400 mt-1">Telemetry data will appear here once the driver begins their trip.</p>
+                </div>
               )}
               {/* Events Section */}
-              {history && history.events && (
+              {history && history.events?.length > 0 && (
                 <div className="opacity-100">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">

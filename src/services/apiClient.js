@@ -180,11 +180,11 @@ export const apiClient = {
     await delay(400);
     const driver = await this.getDriverById(id);
     
-    if (!driver) {
+    if (!driver || driver.riskScore === 0) {
       return { history: [], events: [] };
     }
     
-    const currentScore = driver.riskScore || 0;
+    const currentScore = driver.riskScore;
     
     // Generate a realistic fatigue curve that ends at the driver's current real/mock score
     const history = [
