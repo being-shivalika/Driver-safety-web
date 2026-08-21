@@ -65,18 +65,42 @@ export const apiClient = {
 
   async getDriverInfo() {
     try {
-      const response = await fetch('https://vigildrivebackend.onrender.com/api/v2/driverinfo/');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch driver info: ${response.statusText}`);
+      const [infoRes, dataRes] = await Promise.all([
+        fetch('https://vigildrivebackend.onrender.com/api/v2/driverinfo/'),
+        fetch('https://vigildrivebackend.onrender.com/api/v2/driverdata/')
+      ]);
+
+      if (!infoRes.ok) {
+        throw new Error(`Failed to fetch driver info: ${infoRes.statusText}`);
       }
-      const data = await response.json();
-      
+
+      const infoData = await infoRes.json();
+      const telemetryData = dataRes.ok ? await dataRes.json() : [];
+
       // If API returns data, use it
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map(normalizeDriverInfo);
+      if (Array.isArray(infoData) && infoData.length > 0) {
+        return infoData.map(d => {
+          // Join with driverdata based on the internal database 'id'
+          const telemetry = Array.isArray(telemetryData) ? telemetryData.find(t => t.id === d.id) : null;
+          
+          return {
+            driverId: d.truck_id, // UI uses truck_id as the unique key
+            driverName: d.driver,
+            truckId: d.truck_id,
+            truckNumber: d.truck_no,
+            origin: d.start_point,
+            destination: d.end_point,
+            latitude: Number(d.lat),
+            longitude: Number(d.lon),
+            status: d.status,
+            riskLevel: telemetry?.risk_level || 'LOW',
+            riskScore: telemetry?.overall_risk_score || 0,
+            perclos: telemetry?.final_perclos,
+            maxBlink: telemetry?.max_blink_duration_ms
+          };
+        });
       }
       
-      // If API is empty, fall through to the fallback below
       console.warn("API returned empty array. Using fallback data for preview.");
     } catch (error) {
       console.warn("API is unavailable (502/Error). Using fallback data for preview.", error);
@@ -96,23 +120,6 @@ export const apiClient = {
       riskLevel: d.riskLevel,
       riskScore: d.riskScore
     }));
-  },
-
-  async getDriverTelemetry(truckId) {
-    try {
-      const response = await fetch('https://vigildrivebackend.onrender.com/api/v2/driverdata/');
-      if (!response.ok) return null;
-      const data = await response.json();
-      
-      if (Array.isArray(data)) {
-        // Find the latest telemetry for this truck_id
-        const telemetry = data.filter(d => d.truck_id === truckId).sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
-        return telemetry.length > 0 ? telemetry[0] : null;
-      }
-    } catch (e) {
-      console.warn("Telemetry API unavailable.", e);
-    }
-    return null;
   },
 
   async getFleetVehicles() {

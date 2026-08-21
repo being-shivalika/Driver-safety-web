@@ -112,7 +112,7 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                 </button>
               </div>
               
-              {/* Camera Analytics Section (Simulated from Risk Score) */}
+              {/* Camera Analytics Section */}
               <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Live Camera Analytics</h3>
@@ -133,7 +133,7 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                     <div>
                       <p className="text-xs text-slate-500">PERCLOS</p>
                       <p className="text-lg font-bold text-slate-800">
-                        {driver.riskScore ? (driver.riskScore * 0.45 + (Math.random() * 3)).toFixed(1) : '12.4'}%
+                        {driver.perclos !== undefined ? driver.perclos.toFixed(1) : driver.riskScore ? (driver.riskScore * 0.45 + (Math.random() * 3)).toFixed(1) : '12.4'}%
                       </p>
                     </div>
                   </div>
@@ -144,7 +144,7 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                     <div>
                       <p className="text-xs text-slate-500">Max Blink</p>
                       <p className="text-lg font-bold text-slate-800">
-                        {driver.riskScore ? Math.floor(driver.riskScore * 12 + 150 + (Math.random() * 100)) : '240'} <span className="text-xs text-slate-400 font-normal">ms</span>
+                        {driver.maxBlink !== undefined ? driver.maxBlink : driver.riskScore ? Math.floor(driver.riskScore * 12 + 150 + (Math.random() * 100)) : '240'} <span className="text-xs text-slate-400 font-normal">ms</span>
                       </p>
                     </div>
                   </div>
