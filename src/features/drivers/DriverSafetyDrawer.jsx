@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, Activity, ShieldAlert, Map } from "lucide-react";
+import { X, Activity, ShieldAlert, Map, Heart, Gauge } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RiskBadge } from "../../components/ui/RiskBadge";
 import { apiClient } from "../../services/apiClient";
@@ -16,6 +16,7 @@ import {
 export const DriverSafetyDrawer = ({ driverId, onClose }) => {
   const [driver, setDriver] = useState(null);
   const [history, setHistory] = useState(null);
+  const [telemetry, setTelemetry] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -27,8 +28,11 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
       try {
         const d = await apiClient.getDriverById(driverId);
         const h = await apiClient.getDriverRiskHistory(driverId);
+        const tel = await apiClient.getDriverTelemetry(driverId);
+        
         setDriver(d);
         setHistory(h);
+        setTelemetry(tel);
       } catch (error) {
         console.error("Failed to load driver details", error);
       } finally {
@@ -107,6 +111,45 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                   View on Map
                 </button>
               </div>
+              
+              {/* Telemetry Section (Real API) */}
+              {telemetry && (
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Live Biometrics</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </span>
+                      <span className="text-xs font-semibold text-green-600">LIVE</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm flex items-center gap-3">
+                      <div className="bg-red-50 p-2 rounded-lg">
+                        <Heart className="w-5 h-5 text-red-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Heart Rate</p>
+                        <p className="text-lg font-bold text-slate-800">{telemetry.heart_rate || '--'} <span className="text-xs text-slate-400 font-normal">bpm</span></p>
+                      </div>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm flex items-center gap-3">
+                      <div className="bg-sky-50 p-2 rounded-lg">
+                        <Gauge className="w-5 h-5 text-sky-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Speed</p>
+                        <p className="text-lg font-bold text-slate-800">
+                          {telemetry.location && telemetry.location.length > 0 ? Math.round(telemetry.location[0].speed * 3.6) : '--'} <span className="text-xs text-slate-400 font-normal">km/h</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               
 
               {/* Trend Section (Mock Data) */}

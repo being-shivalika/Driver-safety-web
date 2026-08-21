@@ -98,6 +98,23 @@ export const apiClient = {
     }));
   },
 
+  async getDriverTelemetry(truckId) {
+    try {
+      const response = await fetch('https://vigildrivebackend.onrender.com/api/v2/driverdata/');
+      if (!response.ok) return null;
+      const data = await response.json();
+      
+      if (Array.isArray(data)) {
+        // Find the latest telemetry for this truck_id
+        const telemetry = data.filter(d => d.truck_id === truckId).sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+        return telemetry.length > 0 ? telemetry[0] : null;
+      }
+    } catch (e) {
+      console.warn("Telemetry API unavailable.", e);
+    }
+    return null;
+  },
+
   async getFleetVehicles() {
     return this.getDriverInfo();
   },
