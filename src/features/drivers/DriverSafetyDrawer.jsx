@@ -132,7 +132,7 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                     <div>
                       <p className="text-xs text-slate-500">PERCLOS</p>
                       <p className="text-lg font-bold text-slate-800">
-                        {driver.perclos !== undefined ? driver.perclos.toFixed(1) : driver.riskScore ? (driver.riskScore * 0.45 + (Math.random() * 3)).toFixed(1) : '12.4'}%
+                        {driver.perclos !== undefined ? driver.perclos.toFixed(1) : (driver.riskScore !== null ? (driver.riskScore * 0.45 + (Math.random() * 3)).toFixed(1) + '%' : '--')}
                       </p>
                     </div>
                   </div>
@@ -143,7 +143,7 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                     <div>
                       <p className="text-xs text-slate-500">Max Blink</p>
                       <p className="text-lg font-bold text-slate-800">
-                        {driver.maxBlink !== undefined ? driver.maxBlink : driver.riskScore ? Math.floor(driver.riskScore * 12 + 150 + (Math.random() * 100)) : '240'} <span className="text-xs text-slate-400 font-normal">ms</span>
+                        {driver.maxBlink !== undefined ? driver.maxBlink : (driver.riskScore !== null ? Math.floor(driver.riskScore * 12 + 150 + (Math.random() * 100)) + ' ms' : '--')}
                       </p>
                     </div>
                   </div>

@@ -50,7 +50,7 @@ export const apiClient = {
       else if (d.riskLevel === 'MODERATE') moderateRisk++;
       else if (d.riskLevel === 'HIGH') highRisk++;
       else if (d.riskLevel === 'CRITICAL') criticalRisk++;
-      else lowRisk++; // Default to low if unknown
+      // Ignore PENDING drivers for risk counts
     });
     
     return {
@@ -95,8 +95,8 @@ export const apiClient = {
             latitude: Number(d.lat),
             longitude: Number(d.lon),
             status: d.status,
-            riskLevel: telemetry?.risk_level || 'LOW',
-            riskScore: telemetry?.overall_risk_score || 0,
+            riskLevel: telemetry ? (telemetry.risk_level || 'LOW') : 'PENDING',
+            riskScore: telemetry ? (telemetry.overall_risk_score || 0) : null,
             perclos: telemetry?.final_perclos,
             maxBlink: telemetry?.max_blink_duration_ms
           };
@@ -180,8 +180,12 @@ export const apiClient = {
     await delay(400);
     const driver = await this.getDriverById(id);
     
-    // Default to a low score if the API doesn't provide one
-    const currentScore = driver?.riskScore || 12;
+    // If the driver has no telemetry data yet, return empty history
+    if (!driver || driver.riskScore === null || driver.riskLevel === 'PENDING') {
+      return { history: [], events: [] };
+    }
+    
+    const currentScore = driver.riskScore;
     
     // Generate a realistic fatigue curve that ends at the driver's current real/mock score
     const history = [
