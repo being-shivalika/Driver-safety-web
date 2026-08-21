@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, Activity, ShieldAlert, Map, Eye, Video } from "lucide-react";
+import { X, Activity, ShieldAlert, Map, Eye, Video, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RiskBadge } from "../../components/ui/RiskBadge";
 import { apiClient } from "../../services/apiClient";
@@ -17,6 +17,7 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
   const [driver, setDriver] = useState(null);
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [actionTaken, setActionTaken] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
 
     const loadDriverData = async () => {
       setLoading(true);
+      setActionTaken(null);
       try {
         const d = await apiClient.getDriverById(driverId);
         const h = await apiClient.getDriverRiskHistory(driverId);
@@ -148,10 +150,78 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                 </div>
               </div>
               
+              {/* Actions & Insights Section */}
+              {(driver.riskLevel === 'CRITICAL' || driver.riskLevel === 'HIGH' || driver.riskScore >= 50) && (
+                <div className={`p-4 rounded-xl border ${driver.riskScore >= 60 ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'}`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <ShieldAlert className={`w-4 h-4 ${driver.riskScore >= 60 ? 'text-red-600' : 'text-orange-600'}`} />
+                    <h3 className={`text-xs font-bold uppercase tracking-wider ${driver.riskScore >= 60 ? 'text-red-800' : 'text-orange-800'}`}>
+                      Required Action
+                    </h3>
+                  </div>
+                  
+                  <div className={`bg-white p-3 rounded-lg border shadow-sm ${driver.riskScore >= 60 ? 'border-red-100' : 'border-orange-100'}`}>
+                    <p className="text-xs text-slate-800 font-medium mb-1">
+                      Current Condition: <span className={`font-bold ${driver.riskScore >= 60 ? 'text-red-600' : 'text-orange-600'}`}>{driver.riskLevel} FATIGUE</span>
+                    </p>
+                    
+                    <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+                      {driver.riskScore >= 60 ? (
+                        <>
+                          <strong>Risk score is critically high ({driver.riskScore}/100)</strong>. Enforce immediate rest. Perform a mandatory check-in after 10 mins. If condition worsens, send a replacement driver immediately. If improved, enforce a 30-45 minute rest before continuing journey.
+                        </>
+                      ) : (
+                        <>
+                          <strong>Risk score is elevated ({driver.riskScore}/100)</strong>. Enforce immediate rest stop. Perform a follow-up check after 20-30 mins. If condition has not improved, dispatch a replacement driver.
+                        </>
+                      )}
+                    </p>
+                    
+                    {actionTaken === 'REPLACE' ? (
+                      <div className="flex items-center gap-2 mt-2 p-2.5 bg-green-50 border border-green-200 rounded text-green-700 text-xs font-semibold animate-in fade-in zoom-in duration-200">
+                        <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                        Replacement driver dispatched to location.
+                      </div>
+                    ) : actionTaken === 'CHECKED' ? (
+                      <div className="mt-2 space-y-2 animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-center gap-2 p-2.5 bg-orange-50 border border-orange-200 rounded text-orange-700 text-xs font-semibold">
+                          <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+                          Follow-up check complete. Driver still fatigued.
+                        </div>
+                        <button onClick={() => setActionTaken('REPLACE')} className="w-full py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded text-[11px] font-semibold transition-colors shadow-sm hover:shadow">
+                          Send Replacement Driver
+                        </button>
+                      </div>
+                    ) : actionTaken === 'REST' ? (
+                      <div className="mt-2 space-y-2 animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-center gap-2 p-2.5 bg-green-50 border border-green-200 rounded text-green-700 text-xs font-semibold">
+                          <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                          Rest period enforced. Driver notified.
+                        </div>
+                        <button onClick={() => setActionTaken('CHECKED')} className="w-full py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded text-[11px] font-semibold transition-colors shadow-sm hover:shadow">
+                          Simulate Follow-up Check ({driver.riskScore >= 60 ? '10 mins' : '20 mins'} later)
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button onClick={() => setActionTaken('REST')} className={`flex-1 py-1.5 text-white rounded text-[11px] font-semibold transition-colors shadow-sm hover:shadow ${driver.riskScore >= 60 ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-500 hover:bg-orange-600'}`}>
+                          Permit Immediate Rest
+                        </button>
+                        {driver.riskScore >= 60 && (
+                          <button onClick={() => setActionTaken('REPLACE')} className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded text-[11px] font-semibold transition-colors shadow-sm hover:shadow">
+                            Send Replacement
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-              {/* Trend Section (Mock Data) */}
+
+              {/* Trend Section */}
               {history && (
-                <div className="opacity-60">
+                <div className="opacity-100">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Activity className="w-4 h-4 text-slate-500" />
@@ -159,7 +229,6 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                         Risk Trend (Today)
                       </h4>
                     </div>
-                    <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase tracking-wider font-semibold">Dev Data</span>
                   </div>
                   <div className="h-48 w-full border border-slate-100 rounded-xl p-4 bg-white">
                     <ResponsiveContainer width="100%" height="100%">
@@ -195,9 +264,9 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                   </div>
                 </div>
               )}
-              {/* Events Section (Mock Data) */}
+              {/* Events Section */}
               {history && history.events && (
-                <div className="opacity-60">
+                <div className="opacity-100">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <ShieldAlert className="w-4 h-4 text-slate-500" />
@@ -205,7 +274,6 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
                         Recent Safety Events
                       </h4>
                     </div>
-                    <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase tracking-wider font-semibold">Dev Data</span>
                   </div>
                   <div className="relative border-l-2 border-slate-200 ml-3 space-y-6">
                     {history.events.map((event, idx) => (
