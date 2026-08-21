@@ -16,7 +16,6 @@ import {
 export const DriverSafetyDrawer = ({ driverId, onClose }) => {
   const [driver, setDriver] = useState(null);
   const [history, setHistory] = useState(null);
-  const [telemetry, setTelemetry] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -28,11 +27,9 @@ export const DriverSafetyDrawer = ({ driverId, onClose }) => {
       try {
         const d = await apiClient.getDriverById(driverId);
         const h = await apiClient.getDriverRiskHistory(driverId);
-        const tel = await apiClient.getDriverTelemetry(driverId);
         
         setDriver(d);
         setHistory(h);
-        setTelemetry(tel);
       } catch (error) {
         console.error("Failed to load driver details", error);
       } finally {
