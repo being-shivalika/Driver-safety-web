@@ -14,7 +14,7 @@ export const DriversPage = () => {
   // Registration State
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [registering, setRegistering] = useState(false);
-  const [regData, setRegData] = useState({ driverName: '', truckId: '', vehicleNo: '' });
+  const [regData, setRegData] = useState({ driverName: '', truckId: '', vehicleNo: '', startPoint: '', endPoint: '' });
   const [successData, setSuccessData] = useState(null);
 
   const loadDrivers = async () => {
@@ -47,7 +47,7 @@ export const DriversPage = () => {
     try {
       const response = await apiClient.registerDriver(regData);
       setSuccessData(response);
-      setRegData({ driverName: '', truckId: '', vehicleNo: '' });
+      setRegData({ driverName: '', truckId: '', vehicleNo: '', startPoint: '', endPoint: '' });
       await loadDrivers();
     } catch (error) {
       console.error("Registration failed", error);
@@ -59,7 +59,7 @@ export const DriversPage = () => {
   const closeRegisterModal = () => {
     setIsRegisterOpen(false);
     setSuccessData(null);
-    setRegData({ driverName: '', truckId: '', vehicleNo: '' });
+    setRegData({ driverName: '', truckId: '', vehicleNo: '', startPoint: '', endPoint: '' });
   };
 
   return (
@@ -255,6 +255,31 @@ export const DriversPage = () => {
                       className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fleet-accent focus:ring-1 focus:ring-fleet-accent"
                       placeholder="e.g. HR38AB1234"
                     />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Start Point</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={regData.startPoint}
+                        onChange={e => setRegData({...regData, startPoint: e.target.value})}
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fleet-accent focus:ring-1 focus:ring-fleet-accent"
+                        placeholder="e.g. Delhi"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">End Point</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={regData.endPoint}
+                        onChange={e => setRegData({...regData, endPoint: e.target.value})}
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fleet-accent focus:ring-1 focus:ring-fleet-accent"
+                        placeholder="e.g. Mumbai"
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex gap-3 pt-4">

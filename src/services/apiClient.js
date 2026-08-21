@@ -143,8 +143,8 @@ export const apiClient = {
         driver: data.driverName,
         truck_id: data.truckId,
         truck_no: data.vehicleNo,
-        start_point: "Pending",
-        end_point: "Pending",
+        start_point: data.startPoint || "Not Assigned",
+        end_point: data.endPoint || "Not Assigned",
         lat: "28.6139", // Default starting coords
         lon: "77.2090",
         status: "IN_PROGRESS"
